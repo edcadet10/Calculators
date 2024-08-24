@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variance and Standard Deviation Calculator</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 400;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+            background: #333;
+            color: #f0f0f0;
+        }
+        input[type="text"]:focus, input[type="file"]:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+        }
+        button {
+            background: #007aff;
+            color: #fff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #005bb5;
+        }
+        p {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 300;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the text */
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Variance & Standard Deviation Calculator</h1>
+        <div class="tooltip">
+            <input type="text" id="data" placeholder="Enter numbers separated by commas">
+            <span class="tooltiptext">Input your data set here. Example: 1, 2, 3, 4, 5</span>
+        </div>
+        <div class="tooltip">
+            <input type="file" id="fileInput" accept=".csv, .xlsx" />
+            <span class="tooltiptext">Upload a CSV or Excel file with your data set</span>
+        </div>
+        <button onclick="calculate()">Calculate</button>
+
+        <div class="tooltip">
+            <p id="variance">Variance: </p>
+            <span class="tooltiptext">Variance shows how much the data varies from the average value.</span>
+        </div>
+        <div class="tooltip">
+            <p id="stdDev">Standard Deviation: </p>
+            <span class="tooltiptext">Standard Deviation indicates the spread of the data set.</span>
+        </div>
+
+        <div class="footer">
+            <p>Built by edcadet10</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        function calculate() {
+            let data = [];
+
+            // Check if data is entered manually or via file upload
+            let dataInput = document.getElementById("data").value;
+            if (dataInput) {
+                data = dataInput.split(',').map(Number);
+                processData(data);
+            } else {
+                let fileInput = document.getElementById("fileInput").files[0];
+                if (fileInput) {
+                    readFile(fileInput);
+                } else {
+                    alert("Please enter data or upload a file.");
+                }
+            }
+        }
+
+        function processData(data) {
+            // Calculate the mean
+            let mean = data.reduce((a, b) => a + b, 0) / data.length;
+
+            // Calculate the variance
+            let variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / data.length;
+
+            // Calculate the standard deviation
+            let stdDev = Math.sqrt(variance);
+
+            // Display the results
+            document.getElementById("variance").innerText = "Variance: " + variance.toFixed(2);
+            document.getElementById("stdDev").innerText = "Standard Deviation: " + stdDev.toFixed(2);
+        }
+
+        function readFile(file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let data = e.target.result;
+
+                if (file.name.endsWith('.csv')) {
+                    let parsedData = parseCSV(data);
+                    processData(parsedData);
+                } else if (file.name.endsWith('.xlsx')) {
+                    let parsedData = parseExcel(data);
+                    processData(parsedData);
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function parseCSV(data) {
+            return data.split('\n').map(row => parseFloat(row.trim())).filter(value => !isNaN(value));
+        }
+
+        function parseExcel(data) {
+            let workbook = XLSX.read(data, { type: 'binary' });
+            let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            let rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            return rows.flat().map(value => parseFloat(value)).filter(value => !isNaN(value));
+        }
+    </script>
+</body>
+</html>
